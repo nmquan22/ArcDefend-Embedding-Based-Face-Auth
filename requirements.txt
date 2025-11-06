@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+facenet-pytorch
+torch
+torchvision
+opencv-python
+numpy
+scikit-learn
+matplotlib
+tqdm
+python-multipart
+aiofiles
+ftfy
+regex

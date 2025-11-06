@@ -1,0 +1,41 @@
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+
+# Virtual environment
+venv/
+ENV/
+env/
+
+# Byte-compiled
+*.py[cod]
+
+# FastAPI / Uvicorn logs
+*.log
+
+# Streamlit temporary files
+.streamlit/
+
+# SQLite database
+arcdefend.db
+
+# Images / datasets (optional)
+data/
+datasets/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python build
+build/
+dist/
+*.egg-info/
