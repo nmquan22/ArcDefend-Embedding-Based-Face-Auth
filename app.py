@@ -46,11 +46,13 @@ def get_face_tensor_from_bytes(data: bytes):
     return face.to(device)
 
 def extract_embedding_from_tensor(face_tensor):
+    x = face_tensor.to(device).float()      
     with torch.no_grad():
-        emb = resnet(face_tensor)  # (1,512)
-    emb = emb.detach().cpu().numpy().reshape(-1)
-    emb = emb / (np.linalg.norm(emb)+1e-10)
-    return emb.astype(float)
+        emb = resnet(x)[0].cpu().numpy()
+    emb = emb / (np.linalg.norm(emb) + 1e-10)
+    return emb
+
+
 
 def save_user_embedding(user_id: str, emb, metadata: dict = None):
     conn = sqlite3.connect(DB_PATH)
@@ -123,6 +125,7 @@ def export_embeddings():
     for u, embs in db.items():
         out[u] = [e.tolist() for e in embs]
     return out
+
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
