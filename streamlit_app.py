@@ -83,22 +83,10 @@ with tab_enroll:
 # --- Login Tab ---
 with tab_login:
     st.subheader("Login with face")
+
+    # === Left: image & preview ===
     login_img = st.file_uploader("Upload image for login", type=["jpg", "jpeg", "png"], key="login_file")
-    th = st.slider(
-        "Cosine threshold",
-        min_value=0.50,
-        max_value=0.99,
-        value=0.80,
-        step=0.01,
-        help="Set threshold according to ROC/EER evaluation. If cosine ≥ threshold → accept."
-    )
-
-    c1, c2 = st.columns([1, 1])
-    with c1:
-        login_preview = st.checkbox("Preview login image", True, key="login_prev")
-    with c2:
-        btn_login = st.button("Login", disabled=not login_img)
-
+    login_preview = st.checkbox("Preview login image", True, key="login_prev")
     if login_img and login_preview:
         try:
             login_img.seek(0)
@@ -106,29 +94,106 @@ with tab_login:
         except Exception:
             st.warning("Unable to render preview image (but upload may still work).")
 
+    # === Right: thresholds & defense options ===
+    st.markdown("---")
+    colA, colB = st.columns([1,1])
+
+    with colA:
+        th = st.slider(
+            "Cosine threshold",
+            min_value=0.50, max_value=0.99, value=0.80, step=0.01,
+            help="If cosine ≥ threshold → accept (sau khi defense)."
+        )
+        enable_defense = st.checkbox("Enable defense (call /login_defense)", value=True)
+
+    with colB:
+        if enable_defense:
+            mode = st.selectbox("Defense mode", ["gaussian", "median", "jpeg", "chain", "none"], index=0)
+            K = st.slider("EoT samples K", min_value=1, max_value=20, value=5, step=1,
+                          help="K lần làm sạch + đánh giá, tính trung bình/median/max và kiểm tra variance.")
+            aggregate = st.selectbox("Aggregate scores", ["mean","median","max"], index=0)
+            variance_gate = st.number_input("Variance gate", min_value=0.0, max_value=0.1, value=0.0025, step=0.0005)
+
+            # params theo mode
+            if mode in ["gaussian", "chain"]:
+                gaussian_ksize = st.selectbox("Gaussian ksize (odd)", [3,5,7,9,11], index=0)
+                gaussian_sigma_min = st.number_input("Gaussian σ min", min_value=0.0, max_value=3.0, value=0.0, step=0.1)
+                gaussian_sigma_max = st.number_input("Gaussian σ max", min_value=0.0, max_value=3.0, value=1.0, step=0.1)
+            else:
+                gaussian_ksize, gaussian_sigma_min, gaussian_sigma_max = 3, 0.0, 1.0
+
+            if mode in ["median"]:
+                median_ksize = st.selectbox("Median ksize (odd)", [3,5,7,9,11], index=0)
+            else:
+                median_ksize = 3
+
+            if mode in ["jpeg", "chain"]:
+                jpeg_q_min = st.slider("JPEG quality min", min_value=10, max_value=100, value=50, step=1)
+                jpeg_q_max = st.slider("JPEG quality max", min_value=10, max_value=100, value=85, step=1)
+            else:
+                jpeg_q_min, jpeg_q_max = 50, 85
+        else:
+            mode = "none"; K = 1; aggregate = "mean"; variance_gate = 0.0025
+            gaussian_ksize = 3; gaussian_sigma_min = 0.0; gaussian_sigma_max = 1.0
+            median_ksize = 3; jpeg_q_min = 50; jpeg_q_max = 85
+
+    btn_login = st.button("Login", disabled=not login_img)
+
     if btn_login and login_img:
         login_img.seek(0)
         files = {"file": (login_img.name, login_img.read(), login_img.type or "image/jpeg")}
-        params = {"threshold": th}
-        code, res = post_file("/login", files=files, params=params)
+
+        if enable_defense:
+            params = {
+                "threshold": th,
+                "mode": mode,
+                "K": K,
+                "gaussian_ksize": gaussian_ksize,
+                "gaussian_sigma_min": gaussian_sigma_min,
+                "gaussian_sigma_max": gaussian_sigma_max,
+                "median_ksize": median_ksize,
+                "jpeg_q_min": jpeg_q_min,
+                "jpeg_q_max": jpeg_q_max,
+                "variance_gate": variance_gate,
+                "aggregate": aggregate,
+            }
+            code, res = post_file("/login_defense", files=files, params=params)
+        else:
+            # dùng /login cũ
+            params = {"threshold": th}
+            code, res = post_file("/login", files=files, params=params)
+
         if code == 200 and isinstance(res, dict):
-            accepted = res.get("accepted", False)
-            best_user = res.get("best_user")
-            score = float(res.get("score", 0.0))
-            threshold = float(res.get("threshold", th))
-
             st.markdown("---")
-            st.metric("Cosine score", f"{score:.4f}")
-            # progress: normalized between 0.5 and threshold/0.99 range
-            prog_val = min(max((score - 0.5) / 0.49, 0.0), 1.0)
-            st.progress(prog_val)
-
-            if accepted:
-                st.success(f"Accepted — matched user: {best_user} (score={score:.4f} ≥ threshold={threshold:.2f})")
+            if enable_defense:
+                # hiển thị các số liệu defense
+                score_mean = res.get("score_mean", 0.0)
+                score_var  = res.get("score_var", 0.0)
+                st.metric("Cosine (aggregate)", f"{score_mean:.4f}")
+                st.metric("Variance", f"{score_var:.6f}")
+                st.json({k: v for k, v in res.items()
+                         if k in ["accepted","best_user","score_mean","score_median","score_max","score_min","score_var","threshold","mode","K","variance_gate","aggregate"]})
+                accepted = bool(res.get("accepted", False))
+                best_user = res.get("best_user")
+                prog_val = min(max((score_mean - 0.5) / 0.49, 0.0), 1.0)
+                st.progress(prog_val)
+                if accepted:
+                    st.success(f"[DEFENSE] Accepted — matched user: {best_user}")
+                else:
+                    st.error("[DEFENSE] Rejected")
             else:
-                st.error(f"Rejected — best match: {best_user} (score={score:.4f} < threshold={threshold:.2f})")
-        elif code == 400:
-            st.error("Bad request — please check the uploaded image.")
+                # logic cũ
+                accepted = res.get("accepted", False)
+                best_user = res.get("best_user")
+                score = float(res.get("score", 0.0))
+                threshold = float(res.get("threshold", th))
+                st.metric("Cosine score", f"{score:.4f}")
+                st.progress(min(max((score - 0.5) / 0.49, 0.0), 1.0))
+                if accepted:
+                    st.success(f"Accepted — matched user: {best_user} (score={score:.4f} ≥ threshold={threshold:.2f})")
+                else:
+                    st.error(f"Rejected — best match: {best_user} (score={score:.4f} < threshold={threshold:.2f})")
+
         elif code == 0:
             st.error(f"Network error: {res.get('error')}")
         else:

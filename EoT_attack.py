@@ -73,9 +73,6 @@ def extract_embedding(resnet, face_tensor: torch.Tensor):
 # Input/Output: x dạng (1,C,H,W) float [0,1]
 def random_affine_batch_on(x, tx=0.03, ty=0.03, scale_range=(0.97, 1.03),
                            rot_deg=3.0, bright=0.05, samples=8):
-    """
-    Trả về list các tensor đã biến đổi, MỖI tensor vẫn là hàm của x (giữ đồ thị autograd).
-    """
     b, c, h, w = x.shape
     outs = []
     for _ in range(samples):
@@ -115,7 +112,6 @@ def fgsm_targeted_eot(model, crop_tensor, target_emb, epsilon=8/255., samples=12
     total_grad = torch.zeros_like(x)
     loss_acc = 0.0
 
-    # EoT: áp biến đổi lên "x" (không phải x_orig) để còn gradient về x
     trans_list = random_affine_batch_on(x, samples=samples)
     for t in trans_list:
         t_n = normalize_for_facenet(t)              # chuẩn hoá cho FaceNet
@@ -230,11 +226,6 @@ pathB = "D:\\ArcDefend\\Image\\man2.jpg"
 if not os.path.exists(pathA) or not os.path.exists(pathB):
     print("Please put imageA and imageB in the paths or change paths in the script.")
     sys.exit(1)
-# ----------------------------------------------------------------
-# ---- Integration snippet: replace your mode-choice block with this
-# assume: mtcnn, resnet defined; pathA, pathB defined; MODE, EPSILON, PGD_STEPS, PGD_ALPHA, etc.
-# ----------------------------------------------------------------
-
 # load images and crops like you already do
 imgA = Image.open(pathA).convert("RGB")
 imgB = Image.open(pathB).convert("RGB")

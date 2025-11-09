@@ -19,9 +19,9 @@ USE_MOMENTUM = True
 MOMENTUM_MU = 1.0
 ADAM_ITERS = 200
 ADAM_LR = 0.05
-SAVE_PREFIX = "resultAdv/adv_out_norm"
+SAVE_PREFIX = "resultAdv/adv_out_pgd"
 SAVE_PATH = f"{SAVE_PREFIX}_best.png"
-MODE = "adam"   # "fgsm", "pgd", or "adam"
+MODE = "pgd"   # "fgsm", "pgd", or "adam"
 
 cosine = nn.CosineSimilarity(dim=1, eps=1e-8)
 
