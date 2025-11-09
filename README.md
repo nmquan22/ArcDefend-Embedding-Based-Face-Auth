@@ -82,7 +82,9 @@ streamlit run streamlit_app.py
 
 ## 6. Evaluation (ROC / AUC / EER)
 
-Using notebook model_comparision.ipynb
+- Using notebook model_comparision.ipynb for compare Embedding model 
+- Using notebool adv-evaluation-trainning.ipynb for eval attack FGSM on face regconition dataset and adversarial trainning head
+
 ---
 
 ## 7. Project Task Division (4 Members)
