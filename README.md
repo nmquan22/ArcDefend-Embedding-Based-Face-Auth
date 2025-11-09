@@ -1,151 +1,135 @@
-# 🛡️ ArcDefend  
-### A sandbox for embedding-based face authentication, attacks & defenses
-
-ArcDefend is a modular, research-oriented project that demonstrates how to build, evaluate, attack, and defend an embedding-based face authentication system.  
-It is designed for security labs, red-team/blue-team exercises, and educational purposes.
+# ArcDefend
+A sandbox framework for studying embedding-based face authentication, model evaluation, attack simulation, and defensive strategies. ArcDefend is designed for security education, red-team/blue-team exercises, and reproducible research.
 
 ---
 
-# 📌 1. Overview
+## 1. Overview
 
-ArcDefend implements the **full face recognition pipeline** used in most modern authentication systems:
+ArcDefend implements the complete face recognition pipeline used in modern authentication systems:
 
-```
-Image → Face Detector → Face Alignment → Feature Extraction (Embedding) → Cosine Similarity → Threshold Decision
-```
+Image → Face Detection → Alignment → Embedding Extraction → Cosine Similarity → Threshold Decision
 
-We provide API endpoints (FastAPI), a simple UI (Streamlit), a reproducible evaluation pipeline (ROC/EER), and extensions for attacks & defenses.
-
----
-
-# 🚀 2. Features
-
-✅ Face enrollment (one image or multiple images per user)  
-✅ Face login using cosine similarity over 512-D embeddings  
-✅ MTCNN detection + alignment  
-✅ FaceNet (VGGFace2) baseline model for embeddings  
-✅ SQLite database for storing user embeddings  
-✅ Streamlit UI for Enroll/Login  
-✅ Export embeddings for evaluation  
-✅ Evaluation script (ROC, AUC, EER, threshold selection)  
-✅ Extensible tasks for model comparison, attacks, defenses  
+The project provides:
+- FastAPI backend for enrollment, authentication, and embedding export  
+- Streamlit interface for interactive demonstration  
+- A reproducible evaluation toolkit (ROC, AUC, EER, threshold calibration)  
+- Extensions for model comparison, adversarial attacks, and simple defenses  
 
 ---
 
-# 📂 3. Directory Structure
+## 2. Features
+
+- Face enrollment (single or multiple samples per identity)  
+- Authentication using cosine similarity over 512‑D embeddings  
+- MTCNN-based detection and alignment  
+- FaceNet (VGGFace2) as the baseline embedding model  
+- SQLite database for persistent storage  
+- Streamlit user interface (Enroll/Login)  
+- Embedding export for external experiments  
+- Evaluation scripts (ROC, AUC, EER, threshold selection)  
+- Modular design for integrating alternative models, attacks, and defenses  
+
+---
+
+## 3. Directory Structure
 
 ```
-arc-defend/
+arcdefend/
 │
-├── app.py                 
-├── streamlit_app.py       
-├── export_embeddings.py   
-├── eval_threshold.py      
-├── compare_models.py      
-├── arcdefend.db           
+├── app.py                  # FastAPI backend
+├── streamlit_app.py        # Streamlit interface
+├── export_embeddings.py    # Export embeddings for evaluation
+├── eval_threshold.py        # ROC/EER analysis
+├── compare_models.py       # Model comparison pipeline
+├── arcdefend.db            # SQLite database
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-# 🧬 4. System Architecture (Pipeline)
+## 4. System Architecture
 
-### Authentication Flow
+### Authentication Pipeline
 
-1. Image Input — user uploads a photo.  
-2. Face Detection & Alignment (MTCNN).  
-3. Feature Extraction (FaceNet, 512-D embedding).  
-4. Cosine Similarity Matching.  
-5. Threshold Decision (Accept/Reject).
+1. Input image  
+2. Face detection and landmark extraction (MTCNN)  
+3. Geometric alignment  
+4. Embedding extraction (FaceNet or alternative model)  
+5. Cosine similarity comparison  
+6. Threshold-based accept/reject decision  
 
 ---
 
-# 🛠️ 5. Installation
+## 5. Installation
 
+Install dependencies:
 ```
 pip install -r requirements.txt
 ```
 
-Run API:
-
+Run the API:
 ```
-uvicorn app:app --host 0.0.0.0 --port=8000
+uvicorn app:app --host 0.0.0.0 --port 8000
 ```
 
-Run UI:
-
+Run the UI:
 ```
 streamlit run streamlit_app.py
 ```
 
 ---
 
-# 🧪 6. Evaluation (ROC / EER / Threshold)
+## 6. Evaluation (ROC / AUC / EER)
 
-Use:
-
-```
-python eval_threshold.py --db arcdefend.db --max_impostor 10000 --max_genuine 500 --target_fpr 0.001 --out roc.png
-```
-
-Outputs:  
-- ROC curve  
-- AUC  
-- EER  
-- Optimal threshold  
-
+Using notebook model_comparision.ipynb
 ---
 
-# 🧩 7. Project Tasks (for 4 members)
+## 7. Project Task Division (4 Members)
 
-## Task 1 — Core Face Authentication System  
-Owner: Person A  
-- FastAPI (enroll/login)  
+### Task 1 — Core Authentication System  
+- FastAPI endpoints  
 - Streamlit UI  
-- Detection + alignment  
-- Embeddings + cosine  
+- Detection and alignment pipeline  
+- Embedding extraction  
 - SQLite storage  
 
-## Task 2 — Evaluation  
-Owner: Person B  
-- Generate genuine/impostor pairs  
-- ROC, AUC, EER  
-- Threshold tuning  
+### Task 2 — Evaluation  
+- Genuine/impostor pair generation  
+- ROC/AUC computation  
+- Threshold selection  
 
-## Task 3 — Model Comparison  
-Owner: Person C  
-- Compare FaceNet / ArcFace / CLIP  
-- ROC for each model  
-- Analysis  
+### Task 3 — Model Comparison  
+- Benchmark FaceNet, ArcFace, CLIP  
+- ROC plotting  
+- Performance analysis  
 
-## Task 4 — Attack & Defense  
-Owner: Person D  
-- Printed photo attack  
+### Task 4 — Attack and Defense  
+- Printed-photo attack  
 - Screen replay  
-- Simple morphing  
-- Liveness (blink/motion)  
-- Logging, anomaly detection  
+- Basic morphing  
+- Liveness cues (blink/motion)  
+- Score anomaly detection  
 
 ---
 
-# 🔒 8. Security Notes
+## 8. Security Considerations
 
-- Educational use only.  
-- Do not test on real users without consent.  
-- Do not attack production systems.  
-
----
-
-# 🎯 9. Future Work
-
-- JWT login tokens  
-- Webcam support  
-- MediaPipe liveness  
-- Encrypted embeddings  
-- Benchmarking models  
+- Intended strictly for educational and research use  
+- Do not test on real users without explicit consent  
+- Do not apply adversarial methods to production systems  
 
 ---
 
-# 📜 License
+## 9. Future Work
+
+- JWT-based authenticated sessions  
+- Real-time webcam support  
+- Advanced liveness detection  
+- Encrypted or cancelable embeddings  
+- Benchmarking additional embedding models  
+
+---
+
+## License
 MIT License

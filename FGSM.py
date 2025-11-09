@@ -19,7 +19,7 @@ USE_MOMENTUM = True
 MOMENTUM_MU = 1.0
 ADAM_ITERS = 200
 ADAM_LR = 0.05
-SAVE_PREFIX = "adv_out"
+SAVE_PREFIX = "resultAdv/adv_out_norm"
 SAVE_PATH = f"{SAVE_PREFIX}_best.png"
 MODE = "adam"   # "fgsm", "pgd", or "adam"
 
@@ -61,7 +61,8 @@ def crop_face_tensor(mtcnn, pil_image: Image.Image, device=DEVICE):
 
 def extract_embedding(resnet, face_tensor: torch.Tensor):
     # face_tensor: (B,C,H,W) in [0,1] -> convert to [-1,1] then pass
-    x = normalize_for_facenet(face_tensor)
+    #x = normalize_for_facenet(face_tensor)
+    x = face_tensor.to(device=DEVICE).float()
     with torch.no_grad():
         emb = resnet(x)
     return emb  # (B, D), torch.tensor on device
@@ -211,8 +212,8 @@ if __name__ == "__main__":
     mtcnn = MTCNN(image_size=IMG_SIZE, margin=0, device=DEVICE)
     resnet = InceptionResnetV1(pretrained='vggface2').eval().to(DEVICE)
 
-    pathA = "D:\\ArcDefend\\man1.jpg"
-    pathB = "D:\\ArcDefend\\man2.jpg"
+    pathA = "D:\\ArcDefend\\Image\\man1.jpg"
+    pathB = "D:\\ArcDefend\\Image\\man2.jpg"
 
     if not os.path.exists(pathA) or not os.path.exists(pathB):
         print("Please put imageA and imageB in the paths or change paths in the script.")
